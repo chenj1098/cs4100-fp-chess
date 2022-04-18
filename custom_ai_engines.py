@@ -27,6 +27,19 @@ class agent():
     def get_move(self, game_state, color, max_color):
         raise Exception("evaluate_board not implemented")
 
+class moves_heuristic(heuristic):
+    def evaluate_board(self, game_state, max_color):
+        evaluation_score = 0
+        for row in range(0, DIMENSION_ROW):
+            for col in range(0, DIMENSION_COL):
+                # print(row, col)
+                if game_state.is_valid_piece(row, col):
+                    evaluated_piece = game_state.get_piece(row, col)
+                    if evaluated_piece.get_player() == max_color:
+                        piece_moves = evaluated_piece.get_valid_piece_moves(game_state)
+                        evaluation_score += len(piece_moves)
+        return evaluation_score
+
 class capture_heuristic(heuristic):
     def evaluate_board(self, game_state, max_color):
         evaluation_score = 0
@@ -108,6 +121,208 @@ class capture_heuristic(heuristic):
                 return 30 * .1
             elif piece.get_name() is "p":
                 return 10 * .1
+
+class piece_squares_table_heuristic(heuristic):
+    def __init__(self):
+        self.pawn_table_8 = [
+        0,  0,  0,  0,  0,  0,  0,  0,
+        50, 50, 50, 50, 50, 50, 50, 50,
+        10, 10, 20, 30, 30, 20, 10, 10,
+        5,  5, 10, 25, 25, 10,  5,  5,
+        0,  0,  0, 20, 20,  0,  0,  0,
+        5, -5,-10,  0,  0,-10, -5,  5,
+        5, 10, 10,-20,-20, 10, 10,  5,
+        0,  0,  0,  0,  0,  0,  0,  0]
+
+        self.pawn_table_6x4 = [
+        [50,  50,  50,  50],
+        [30, 30, 25, 25],
+        [10, 10, 10, 10],
+        [5, 10, 10, 5],
+        [5, 5, 5, 5],
+        [0,  0,  0,  0]]
+    
+        self.knight_table_8 = [
+        -50,-40,-30,-30,-30,-30,-40,-50,
+        -40,-20,  0,  0,  0,  0,-20,-40,
+        -30,  0, 10, 15, 15, 10,  0,-30,
+        -30,  5, 15, 20, 20, 15,  5,-30,
+        -30,  0, 15, 20, 20, 15,  0,-30,
+        -30,  5, 10, 15, 15, 10,  5,-30,
+        -40,-20,  0,  5,  5,  0,-20,-40,
+        -50,-40,-30,-30,-30,-30,-40,-50]
+
+        self.knight_table_6x4 = [
+        [0, 0, 0, 0],
+        [0, 5, 5, 0],
+        [0, 15, 15, 0],
+        [0, 15, 15, 0],
+        [0, 5,  5, 0],
+        [-5,-5,-5,-5]]
+
+        self.bishop_table_8 = [
+        -20,-10,-10,-10,-10,-10,-10,-20,
+        -10,  0,  0,  0,  0,  0,  0,-10,
+        -10,  0,  5, 10, 10,  5,  0,-10,
+        -10,  5,  5, 10, 10,  5,  5,-10,
+        -10,  0, 10, 10, 10, 10,  0,-10,
+        -10, 10, 10, 10, 10, 10, 10,-10,
+        -10,  5,  0,  0,  0,  0,  5,-10,
+        -20,-10,-10,-10,-10,-10,-10,-20]
+    
+        self.bishop_table_6x4 = [
+        [-20, -10, -10, -20],
+        [-10,  0, 0, -10],
+        [-10,  5, 5, -10],
+        [-10, 10, 10, -10],
+        [-10,  5, 5, -10],
+        [-20, -10, -10, -20]]
+
+        self.rook_table_8 = [
+        0,  0,  0,  0,  0,  0,  0,  0,
+        5, 10, 10, 10, 10, 10, 10,  5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        0,  0,  0,  5,  5,  0,  0,  0]
+
+        self.rook_table_6x4 = [
+        [0,  0,  0,  0],
+        [5, 10, 10,  5],
+        [5,  0, 0, 5],
+        [5,  0, 0, 5],
+        [5,  0, 0, 5],
+        [0,  5,  5,  0]]
+
+        self.queen_table_8 = [
+        -20,-10,-10, -5, -5,-10,-10,-20,
+        -10,  0,  0,  0,  0,  0,  0,-10,
+        -10,  0,  5,  5,  5,  5,  0,-10,
+        -5,  0,  5,  5,  5,  5,  0, -5,
+        0,  0,  5,  5,  5,  5,  0, -5,
+        -10,  5,  5,  5,  5,  5,  0,-10,
+        -10,  0,  5,  0,  0,  0,  0,-10,
+        -20,-10,-10, -5, -5,-10,-10,-20]
+
+        self.queen_table_6x4 = [
+        [-20, -10, -10, -20],
+        [-10,  0,  0, -10],
+        [-10,  5,  5, -10],
+        [-10,  5,  5, -10],
+        [-10,  5,  5, -10],
+        [-20,-10, -10,-20]]
+
+        self.king_table_start_8 = [
+        -30,-40,-40,-50,-50,-40,-40,-30,
+        -30,-40,-40,-50,-50,-40,-40,-30,
+        -30,-40,-40,-50,-50,-40,-40,-30,
+        -30,-40,-40,-50,-50,-40,-40,-30,
+        -20,-30,-30,-40,-40,-30,-30,-20,
+        -10,-20,-20,-20,-20,-20,-20,-10,
+        20, 20,  0,  0,  0,  0, 20, 20,
+        20, 30, 10,  0,  0, 10, 30, 20]
+
+
+        self.king_table_start_6x4 = [
+        [-30,-40,-40,-30],
+        [-30,-40,-40,-30],
+        [-30,-40,-40,-30],
+        [-10,-20,-20,-10],
+        [20, 10, 10, 20],
+        [20, 30, 30, 20]]
+
+        self.king_table_end_8 = [
+        -50,-40,-30,-20,-20,-30,-40,-50,
+        -30,-20,-10,  0,  0,-10,-20,-30,
+        -30,-10, 20, 30, 30, 20,-10,-30,
+        -30,-10, 30, 40, 40, 30,-10,-30,
+        -30,-10, 30, 40, 40, 30,-10,-30,
+        -30,-10, 20, 30, 30, 20,-10,-30,
+        -30,-30,  0,  0,  0,  0,-30,-30,
+        -50,-30,-30,-30,-30,-30,-30,-50]
+
+        self.king_table_end_6x4 = [
+        [-50,-30,-30,-50],
+        [-30,-10,-10,-30],
+        [-30,10,10,-30],
+        [-30,10,10,-30],
+        [-30,0,0,-30],
+        [-50,-30,-30,-50]]
+
+    def evaluate_board(self, game_state, max_color):
+        evaluation_score = 0
+        for row in range(0, DIMENSION_ROW):
+            for col in range(0, DIMENSION_COL):
+                # print(row, col)
+                if game_state.is_valid_piece(row, col):
+                    evaluated_piece = game_state.get_piece(row, col)
+                    evaluation_score += self.get_piece_square_value(evaluated_piece, max_color) * 0.2 + self.get_piece_value(evaluated_piece, max_color)
+        # print("evaluated board", evaluation_score)
+        return evaluation_score
+
+    def get_piece_square_value(self, piece, max_color):
+        if piece.get_player() == max_color:
+            # print("row " +  str(piece.get_row_number()))
+            # print("col " +  str(piece.get_col_number()))
+            if piece.get_name() is "k":
+                return self.king_table_start_6x4[piece.get_row_number()][piece.get_col_number()]
+            elif piece.get_name() is "q":
+                return self.queen_table_6x4[piece.get_row_number()][piece.get_col_number()]
+            elif piece.get_name() is "r":
+                return self.rook_table_6x4[piece.get_row_number()][piece.get_col_number()]
+            elif piece.get_name() is "b":
+                return self.bishop_table_6x4[piece.get_row_number()][piece.get_col_number()]
+            elif piece.get_name() is "n":
+                return self.knight_table_6x4[piece.get_row_number()][piece.get_col_number()]
+            elif piece.get_name() is "p":
+                return self.pawn_table_6x4[piece.get_row_number()][piece.get_col_number()]
+        else:
+            # print("row " +  str(DIMENSION_ROW - piece.get_row_number()))
+            # print("col " +  str(piece.get_col_number()))
+            if piece.get_name() is "k":
+                return -self.king_table_start_6x4[DIMENSION_ROW - piece.get_row_number() - 1][piece.get_col_number()]
+            elif piece.get_name() is "q":
+                return -self.queen_table_6x4[DIMENSION_ROW - piece.get_row_number() - 1][piece.get_col_number()]
+            elif piece.get_name() is "r":
+                return -self.rook_table_6x4[DIMENSION_ROW - piece.get_row_number() - 1][piece.get_col_number()]
+            elif piece.get_name() is "b":
+                return -self.bishop_table_6x4[DIMENSION_ROW - piece.get_row_number() - 1][piece.get_col_number()]
+            elif piece.get_name() is "n":
+                return -self.knight_table_6x4[DIMENSION_ROW - piece.get_row_number() - 1][piece.get_col_number()]
+            elif piece.get_name() is "p":
+                return -self.pawn_table_6x4[DIMENSION_ROW - piece.get_row_number() - 1][piece.get_col_number()]
+
+    def get_piece_value(self, piece, max_color):
+        # print("found piece", piece.get_name(), piece.get_player())
+        if piece.get_player() == max_color:
+            if piece.get_name() is "k":
+                return 1000
+            elif piece.get_name() is "q":
+                return 100
+            elif piece.get_name() is "r":
+                return 50
+            elif piece.get_name() is "b":
+                return 30
+            elif piece.get_name() is "n":
+                return 30
+            elif piece.get_name() is "p":
+                return 10
+        else:
+            if piece.get_name() is "k":
+                return -1000
+            elif piece.get_name() is "q":
+                return -100
+            elif piece.get_name() is "r":
+                return -50
+            elif piece.get_name() is "b":
+                return -30
+            elif piece.get_name() is "n":
+                return -30
+            elif piece.get_name() is "p":
+                return -10
+    
 
 
 class piece_value_heuristic(heuristic):
