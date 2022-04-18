@@ -171,12 +171,12 @@ class piece_squares_table_heuristic(heuristic):
         -20,-10,-10,-10,-10,-10,-10,-20]
     
         self.bishop_table_6x4 = [
-        [-20, -10, -10, -20],
-        [-10,  0, 0, -10],
-        [-10,  5, 5, -10],
-        [-10, 10, 10, -10],
-        [-10,  5, 5, -10],
-        [-20, -10, -10, -20]]
+        [5, 10, 10, 5],
+        [5, 10, 10, 5],
+        [10, 10, 10, 10],
+        [10, 10, 10, 10],
+        [5, 10, 10, 5],
+        [5, 10, 10, 5]]
 
         self.rook_table_8 = [
         0,  0,  0,  0,  0,  0,  0,  0,
@@ -267,7 +267,7 @@ class piece_squares_table_heuristic(heuristic):
             # print("row " +  str(piece.get_row_number()))
             # print("col " +  str(piece.get_col_number()))
             if piece.get_name() is "k":
-                return self.king_table_start_6x4[piece.get_row_number()][piece.get_col_number()]
+                return self.king_table_end_6x4[piece.get_row_number()][piece.get_col_number()]
             elif piece.get_name() is "q":
                 return self.queen_table_6x4[piece.get_row_number()][piece.get_col_number()]
             elif piece.get_name() is "r":
@@ -282,7 +282,7 @@ class piece_squares_table_heuristic(heuristic):
             # print("row " +  str(DIMENSION_ROW - piece.get_row_number()))
             # print("col " +  str(piece.get_col_number()))
             if piece.get_name() is "k":
-                return -self.king_table_start_6x4[DIMENSION_ROW - piece.get_row_number() - 1][piece.get_col_number()]
+                return -self.king_table_end_6x4[DIMENSION_ROW - piece.get_row_number() - 1][piece.get_col_number()]
             elif piece.get_name() is "q":
                 return -self.queen_table_6x4[DIMENSION_ROW - piece.get_row_number() - 1][piece.get_col_number()]
             elif piece.get_name() is "r":

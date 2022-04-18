@@ -62,8 +62,8 @@ class game_state:
                                       True]  # Has king not moved, has Rook1(col=0) not moved, has Rook2(col=7) not moved
         self.white_king_can_castle = [True, True, True]
 
-        black_rook_1 = Rook('r', 0, 0, Player.PLAYER_2)
-        black_rook_2 = Knight('n', 0, 3, Player.PLAYER_2)
+        black_rook_1 = Knight('n', 0, 0, Player.PLAYER_2)
+        black_rook_2 = Bishop('b', 0, 3, Player.PLAYER_2)
         black_queen = Queen('q', 0, 1, Player.PLAYER_2)
         black_king = King('k', 0, 2, Player.PLAYER_2)
         black_pawn_1 = Pawn('p', 1, 0, Player.PLAYER_2)
@@ -76,8 +76,8 @@ class game_state:
         pawn_row = DIMENSION_ROW - 2
         king_row = DIMENSION_ROW - 1
 
-        white_rook_1 = Rook('r', king_row, 0, Player.PLAYER_1)
-        white_rook_2 = Knight('n', king_row, 3, Player.PLAYER_1)
+        white_rook_1 = Knight('n', king_row, 0, Player.PLAYER_1)
+        white_rook_2 = Bishop('b', king_row, 3, Player.PLAYER_1)
         white_queen = Queen('q', king_row, 1, Player.PLAYER_1)
         white_king = King('k', king_row, 2, Player.PLAYER_1)
         white_pawn_1 = Pawn('p', pawn_row, 0, Player.PLAYER_1)
