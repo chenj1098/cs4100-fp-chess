@@ -190,7 +190,7 @@ def main():
                         if e.type == py.QUIT:
                             running = False
 
-                    if turns > 100:
+                    if turns > 200:
                         game_over = True
                         print("game", i, endgame, "timeout in", turns, "turns")
                         break
@@ -232,11 +232,11 @@ def main():
 
                 # updating values
                 if endgame == 1:
-                    ai.update(1.0)
-                    ai2.update(-1.0)
+                    ai.save_in_file()
+                    ai2.save_in_file()
                 elif endgame == 0:
-                    ai.update(-1.0)
-                    ai2.update(1.0)
+                    ai.save_in_file()
+                    ai2.save_in_file()
 
                 # reset game
                 game_over = False

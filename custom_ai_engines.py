@@ -2,6 +2,7 @@ import json
 import math
 import random
 from os.path import exists
+from chess_engine import game_state
 
 from enums import Player
 import constants
@@ -32,76 +33,7 @@ class agent():
     def update(self, reward=0.0, file=None):
         pass
 
-class q_agent(agent):
-    def __init__(self, explore_rate = 0.5, learn_rate = 0.2, discount_factor = 0.8, file="q_agent"):
-        # reading the data from the file
-        if exists(file):
-            print('loading file')
-            with open(file) as f:
-                data = f.read()
-            f.close()
-        else:
-            data = "{}"
-        
-        self.explore_rate = explore_rate
-        self.learn_rate = learn_rate
-        self.discount_factor = discount_factor
-        self.file = file
-        self.q_values = json.loads(data)
-        self.q_updates = []
-    
-    def get_q_val(self, game_state, move):
-        return self.q_values.get(game_state.get_board_str() + str(move), 0.0)
-    
-    def get_best_move_and_val(self, game_state, color):
-        moves = game_state.get_all_legal_moves(color)
-        move = None
-        val = -1000.0
-        for m in moves:
-            v = self.get_q_val(game_state, m)
-            if v > val:
-                move = m
-                val = v
-        return move, val
 
-    def get_move(self, game_state, color):
-        #print(game_state.get_board_str())
-        move = None
-        next_val = 0
-        # explore
-        if random.random() > self.explore_rate:
-            moves = game_state.get_all_legal_moves(color)
-            if moves:
-                move = random.choice(moves)
-                game_state.move_piece(move[0], move[1], True)
-                next_val = self.get_best_move_and_val(game_state, color)[1]
-                game_state.undo_move()
-
-        # exploit
-        else:
-            move, _ = self.get_best_move_and_val(game_state, color)
-            game_state.move_piece(move[0], move[1], True)
-            next_val = self.get_best_move_and_val(game_state, color)[1]
-            game_state.undo_move()
-        
-        # save values for q update step
-        #print(next_val)
-        self.q_updates.append((game_state.get_board_str(), move, next_val))
-        return move
-
-    def update(self, reward=0.0, file=None):
-        #print(self.q_updates)
-        for game_state_str, move, best_val in self.q_updates:
-            v = self.q_values.get(game_state_str + str(move), 0.0)
-            self.q_values[game_state_str + str(move)] = v + self.learn_rate * (reward + self.discount_factor * best_val - v)
-
-        if file==None:
-            file = self.file
-        
-        #print("writing file")
-        with open(file, 'w') as f:
-            f.write(json.dumps(self.q_values))
-        f.close()
 
     
 
@@ -539,3 +471,91 @@ class minimax_alpha_beta_agent(agent):
             bet = min(bet, value)
 
         return value, action
+
+class q_agent(agent):
+    def __init__(self, explore_rate = 0.5, learn_rate = 0.2, discount_factor = 0.8, file="q_agent", heuristic = piece_squares_table_heuristic()):
+        # reading the data from the file
+        if exists(file):
+            print('loading file')
+            with open(file) as f:
+                data = f.read()
+            f.close()
+        else:
+            data = "{}"
+        
+        self.explore_rate = explore_rate
+        self.learn_rate = learn_rate
+        self.discount_factor = discount_factor
+        self.file = file
+        self.q_values = json.loads(data)
+        self.q_updates = []
+        self.heuristic = heuristic
+    
+    def get_q_val(self, game_state, move):
+        return self.q_values.get(game_state.get_board_str() + str(move), 0.0)
+    
+    def get_best_move_and_val(self, game_state, color):
+        moves = game_state.get_all_legal_moves(color)
+        move = None
+        val = -1000.0
+        for m in moves:
+            v = self.get_q_val(game_state, m)
+            if v > val:
+                move = m
+                val = v
+        return move, val
+
+    def get_move(self, game_state, color):
+        #print(game_state.get_board_str())
+        move = None
+        next_val = 0
+        # explore
+        if random.random() > self.explore_rate:
+            moves = game_state.get_all_legal_moves(color)
+            if moves:
+                move = random.choice(moves)
+                game_state.move_piece(move[0], move[1], True)
+                next_val = self.get_best_move_and_val(game_state, color)[1]
+                game_state.undo_move()
+
+        # exploit
+        else:
+            move, _ = self.get_best_move_and_val(game_state, color)
+            game_state.move_piece(move[0], move[1], True)
+            next_val = self.get_best_move_and_val(game_state, color)[1]
+            game_state.undo_move()
+        
+        # save values for q update step
+        #print(next_val)
+        #self.q_updates.append((game_state.get_board_str(), move, next_val))
+        self.update(game_state, move, next_val, color)
+        return move
+
+    def update(self, game_state, move, next_val, color):
+        reward = -self.heuristic.evaluate_board(game_state, color)
+        game_state.move_piece(move[0], move[1], True)
+        reward += self.heuristic.evaluate_board(game_state, color)
+        game_state.undo_move()
+
+        game_state_str = game_state.get_board_str()
+        v = self.q_values.get(game_state_str + str(move), 0.0)
+        self.q_values[game_state_str + str(move)] = v + self.learn_rate * (reward + self.discount_factor * next_val - v)
+
+    def updateTwo(self, reward=0.0, file=None):
+        #print(self.q_updates)
+        for game_state_str, move, best_val in self.q_updates:
+            v = self.q_values.get(game_state_str + str(move), 0.0)
+            self.q_values[game_state_str + str(move)] = v + self.learn_rate * (reward + self.discount_factor * best_val - v)
+
+        self.save_in_file(file)
+
+    def save_in_file(self, file=None):
+        if file==None:
+            file = self.file
+        
+        #print("writing file")
+        with open(file, 'w') as f:
+            f.write(json.dumps(self.q_values))
+        f.close()
+
+    
