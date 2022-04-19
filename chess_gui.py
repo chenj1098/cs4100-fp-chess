@@ -179,8 +179,10 @@ def main():
                 py.display.flip()
 
         elif autoplay == 1:
-            for i in range(10):
-                print("game", i)
+            games = input("How many games?\n")
+            games = int(games)
+            for i in range(games):
+                #print("game", i)
                 turns = 0
                 while running:
                     # quit
@@ -190,9 +192,12 @@ def main():
 
                     if turns > 100:
                         game_over = True
+                        print("game", i, endgame, "timeout in", turns, "turns")
+                        break
 
                     # play game
                     if not game_over:
+                        #print("turn", turns, "player", next_player)
                         if next_player == "w":
                             ai_move = ai.get_move(game_state, Player.PLAYER_1)
                             game_state.move_piece(ai_move[0], ai_move[1], True)
@@ -201,17 +206,45 @@ def main():
                             ai_move = ai2.get_move(game_state, Player.PLAYER_2)
                             game_state.move_piece(ai_move[0], ai_move[1], True)
                             next_player = "w"
-                        #print("turn", turns, "player", next_player)
                         turns = turns + 1
 
-                
-                print("updating values, endgame", endgame)
+                    draw_game_state(screen, game_state, valid_moves, square_selected)
+
+                    # calculating endgame
+                    endgame = game_state.checkmate_stalemate_checker()
+                    if endgame == 0:
+                        # white lost
+                        game_over = True
+                        print("game", i, endgame, "black wins in", turns, "turns")
+                        break
+                    elif endgame == 1:
+                        # black lost
+                        game_over = True
+                        print("game", i, endgame, "white wins in", turns, "turns")
+                        break
+                    elif endgame == 2:
+                        game_over = True
+                        print("game", i, endgame, "tie in", turns, "turns")
+                        break
+
+                    clock.tick(MAX_FPS)
+                    py.display.flip()
+
+                # updating values
                 if endgame == 1:
                     ai.update(1.0)
-                    #ai2.update(-1.0)
+                    ai2.update(-1.0)
                 elif endgame == 0:
                     ai.update(-1.0)
-                    #ai2.update(1.0)
+                    ai2.update(1.0)
+
+                # reset game
+                game_over = False
+                game_state = chess_engine.game_state()
+                valid_moves = []
+                square_selected = ()
+                player_clicks = []
+                valid_moves = []
         return
     
     # run a game with human players

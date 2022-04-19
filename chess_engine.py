@@ -383,10 +383,10 @@ class game_state:
         all_black_moves = self.get_all_legal_moves(Player.PLAYER_2)
         all_white_moves = self.get_all_legal_moves(Player.PLAYER_1)
         if self._is_check and self.whose_turn() and not all_white_moves:
-            print("white lost")
+            #print("white lost")
             return 0
         elif self._is_check and not self.whose_turn() and not all_black_moves:
-            print("black lost")
+            #print("black lost")
             return 1
         elif not all_white_moves and not all_black_moves:
             return 2
@@ -718,7 +718,7 @@ class game_state:
 
             return undoing_move
         else:
-            print("Back to the beginning!")
+            pass#print("Back to the beginning!")
 
     # true if white, false if black
     def whose_turn(self):

@@ -33,7 +33,7 @@ class agent():
         pass
 
 class q_agent(agent):
-    def __init__(self, explore_rate = 0.5, learn_rate = 0.2, discount_factor = 0.8, file="q_agent_1"):
+    def __init__(self, explore_rate = 0.5, learn_rate = 0.2, discount_factor = 0.8, file="q_agent"):
         # reading the data from the file
         if exists(file):
             print('loading file')
@@ -90,7 +90,7 @@ class q_agent(agent):
         return move
 
     def update(self, reward=0.0, file=None):
-        print(self.q_updates)
+        #print(self.q_updates)
         for game_state_str, move, best_val in self.q_updates:
             v = self.q_values.get(game_state_str + str(move), 0.0)
             self.q_values[game_state_str + str(move)] = v + self.learn_rate * (reward + self.discount_factor * best_val - v)
@@ -98,7 +98,7 @@ class q_agent(agent):
         if file==None:
             file = self.file
         
-        print("writing file")
+        #print("writing file")
         with open(file, 'w') as f:
             f.write(json.dumps(self.q_values))
         f.close()
@@ -466,10 +466,10 @@ class minimax_alpha_beta_agent(agent):
         returns ((start row, start col)), (end row, end col))
         '''
         val, action = self.val_ab(game_state, color, color, self.depth, self.alpha, self.beta)
-        print("this turn is:", color)
-        print("best val", val)
-        print("white evaluation", self.heuristic.evaluate_board(game_state, "white"))
-        print("black evaluation", self.heuristic.evaluate_board(game_state, "black"))
+        # print("this turn is:", color)
+        # print("best val", val)
+        # print("white evaluation", self.heuristic.evaluate_board(game_state, "white"))
+        # print("black evaluation", self.heuristic.evaluate_board(game_state, "black"))
         return action
     
     def val_ab(self, game_state, color, max_color, depth, alpha, beta):
