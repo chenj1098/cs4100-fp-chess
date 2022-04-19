@@ -140,35 +140,78 @@ def main():
     
     # run an ai game
     if number_of_players == 0:
+        autoplay = input("Play automatically (0 or 1)?\n")
+        if int(autoplay) == 1:
+            autoplay = 1
+        elif int(autoplay) == 0:
+            autoplay = 0
+        
         next_player = "w"
-        while running:
-            for e in py.event.get():
-                if e.type == py.QUIT:
-                    running = False
-                if e.type == py.MOUSEBUTTONDOWN and not game_over:
-                    if next_player == "w":
-                        ai_move = ai.get_move(game_state, Player.PLAYER_1)
-                        game_state.move_piece(ai_move[0], ai_move[1], True)
-                        next_player = "b"
-                    elif next_player == "b":
-                        ai_move = ai2.get_move(game_state, Player.PLAYER_2)
-                        game_state.move_piece(ai_move[0], ai_move[1], True)
-                        next_player = "w"
+        
+        if autoplay == 0:
+            while running:
+                for e in py.event.get():
+                    if e.type == py.QUIT:
+                        running = False
+                    if e.type == py.MOUSEBUTTONDOWN and not game_over:
+                        if next_player == "w":
+                            ai_move = ai.get_move(game_state, Player.PLAYER_1)
+                            game_state.move_piece(ai_move[0], ai_move[1], True)
+                            next_player = "b"
+                        elif next_player == "b":
+                            ai_move = ai2.get_move(game_state, Player.PLAYER_2)
+                            game_state.move_piece(ai_move[0], ai_move[1], True)
+                            next_player = "w"
 
-            draw_game_state(screen, game_state, valid_moves, square_selected)
-            endgame = game_state.checkmate_stalemate_checker()
-            if endgame == 0:
-                game_over = True
-                draw_text(screen, "Black wins.")
-            elif endgame == 1:
-                game_over = True
-                draw_text(screen, "White wins.")
-            elif endgame == 2:
-                game_over = True
-                draw_text(screen, "Stalemate.")
+                draw_game_state(screen, game_state, valid_moves, square_selected)
+                endgame = game_state.checkmate_stalemate_checker()
+                if endgame == 0:
+                    game_over = True
+                    draw_text(screen, "Black wins.")
+                elif endgame == 1:
+                    game_over = True
+                    draw_text(screen, "White wins.")
+                elif endgame == 2:
+                    game_over = True
+                    draw_text(screen, "Stalemate.")
 
-            clock.tick(MAX_FPS)
-            py.display.flip()
+                clock.tick(MAX_FPS)
+                py.display.flip()
+
+        elif autoplay == 1:
+            for i in range(10):
+                print("game", i)
+                turns = 0
+                while running:
+                    # quit
+                    for e in py.event.get():
+                        if e.type == py.QUIT:
+                            running = False
+
+                    if turns > 100:
+                        game_over = True
+
+                    # play game
+                    if not game_over:
+                        if next_player == "w":
+                            ai_move = ai.get_move(game_state, Player.PLAYER_1)
+                            game_state.move_piece(ai_move[0], ai_move[1], True)
+                            next_player = "b"
+                        elif next_player == "b":
+                            ai_move = ai2.get_move(game_state, Player.PLAYER_2)
+                            game_state.move_piece(ai_move[0], ai_move[1], True)
+                            next_player = "w"
+                        #print("turn", turns, "player", next_player)
+                        turns = turns + 1
+
+                
+                print("updating values, endgame", endgame)
+                if endgame == 1:
+                    ai.update(1.0)
+                    #ai2.update(-1.0)
+                elif endgame == 0:
+                    ai.update(-1.0)
+                    #ai2.update(1.0)
         return
     
     # run a game with human players

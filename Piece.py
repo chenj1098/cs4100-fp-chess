@@ -63,6 +63,9 @@ class Rook(Piece):
     def __init__(self, name, row_number, col_number, player):
         super().__init__(name, row_number, col_number, player)
         self.has_moved = False
+    
+    def __str__(self):
+        return self._player[0] + "r"
 
     def get_valid_peaceful_moves(self, game_state):
         return self.traverse(game_state)[0]
@@ -146,6 +149,9 @@ class Rook(Piece):
 
 # Knight (N)
 class Knight(Piece):
+    def __str__(self):
+        return self._player[0] + "n"
+
     def get_valid_peaceful_moves(self, game_state):
         _moves = []
         row_change = [-2, -2, -1, -1, +1, +1, +2, +2]
@@ -204,6 +210,9 @@ class Bishop(Piece):
     def __init__(self, name, row_number, col_number, player):
         super().__init__(name, row_number, col_number, player)
 
+    def __str__(self):
+        return self._player[0] + "b"
+    
     def get_valid_piece_takes(self, game_state):
         return self.traverse(game_state)[1]
 
@@ -302,6 +311,9 @@ class Bishop(Piece):
 
 # Pawn
 class Pawn(Piece):
+    def __str__(self):
+        return self._player[0] + "p"
+
     def get_valid_piece_takes(self, game_state):
         _moves = []
         if self.is_player(Player.PLAYER_2):
@@ -410,6 +422,9 @@ class Pawn(Piece):
 
 # Queen
 class Queen(Rook, Bishop):
+    def __str__(self):
+        return self._player[0] + "q"
+
     def get_valid_peaceful_moves(self, game_state):
         return (Rook.get_valid_peaceful_moves(Rook(self.get_name(), self.get_row_number(), self.get_col_number(), self.get_player()), game_state) +
                 Bishop.get_valid_peaceful_moves(Bishop(self.get_name(), self.get_row_number(), self.get_col_number(), self.get_player()), game_state))
@@ -424,6 +439,9 @@ class Queen(Rook, Bishop):
 
 # King
 class King(Piece):
+    def __str__(self):
+        return self._player[0] + "k"
+
     def get_valid_piece_takes(self, game_state):
         _moves = []
         row_change = [-1, +0, +1, -1, +1, -1, +0, +1]

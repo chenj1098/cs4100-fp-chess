@@ -7,6 +7,7 @@
 from Piece import Rook, Knight, Bishop, Queen, King, Pawn
 from enums import Player
 import constants
+import copy
 
 DIMENSION_ROW = constants.DIMENSION_ROW
 DIMENSION_COL = constants.DIMENSION_COL
@@ -261,6 +262,16 @@ class game_state:
                 self.board.insert(2, row)
                 empty = empty - 1 
 
+
+    def get_board_str(self):
+        out = ""
+        # print(self.board)
+        for row in self.board:
+            # print("row")
+            for piece in row:
+                # print("piece")
+                out = out + str(piece) + ","
+        return out
 
     def get_piece(self, row, col):
         if (0 <= row < DIMENSION_ROW) and (0 <= col < DIMENSION_COL):
