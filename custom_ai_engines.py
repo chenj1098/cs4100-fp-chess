@@ -408,7 +408,7 @@ class suicide_heuristic(heuristic):
                         else:
                             evaluation_score += row-25
                     else:
-                        evaluation_score += 10
+                        evaluation_score += 4
         # print("evaluated board", evaluation_score)
         return evaluation_score
 
@@ -514,12 +514,12 @@ class minimax_alpha_beta_agent(agent):
         if csc == 0: # white lost
             if max_color == "white":
                 return -5000000, None
-            if max_color == "black":
+            elif max_color == "black":
                 return 5000000, None
         elif csc == 1: # black lost
             if max_color == "white":
                 return 5000000, None
-            if max_color == "black":
+            elif max_color == "black":
                 return -5000000, None
         elif csc == 2: # tie
             return 100, None
@@ -577,8 +577,96 @@ class minimax_alpha_beta_agent(agent):
 
         return value, action
 
+class suicide_minimax_alpha_beta_agent(agent):
+    def __init__(self, depth=3, alpha=-100000, beta=100000, heuristic=piece_value_heuristic()):
+        self.depth = depth
+        self.alpha = alpha
+        self.beta = beta
+        self.heuristic = heuristic
+
+    def get_move(self, game_state, color):
+        '''
+        gets the best move according to the chess engine we implemented
+
+        returns ((start row, start col)), (end row, end col))
+        '''
+        val, action = self.val_ab(game_state, color, color, self.depth, self.alpha, self.beta)
+        # print("this turn is:", color)
+        # print("best val", val)
+        # print("white evaluation", self.heuristic.evaluate_board(game_state, "white"))
+        # print("black evaluation", self.heuristic.evaluate_board(game_state, "black"))
+        return action
+    
+    def val_ab(self, game_state, color, max_color, depth, alpha, beta):
+        csc = game_state.checkmate_stalemate_checker()
+        if csc == 0: # white lost
+            if max_color == "white":
+                return 5000000, None
+            elif max_color == "black":
+                return -5000000, None
+        elif csc == 1: # black lost
+            if max_color == "white":
+                return -5000000, None
+            elif max_color == "black":
+                return 5000000, None
+        elif csc == 2: # tie
+            return -10000, None
+
+        if depth == 0:
+            return self.heuristic.evaluate_board(game_state, max_color), None
+
+        if color == max_color:
+            return self.max_val(game_state, color, max_color, depth, alpha, beta)
+        else:
+            return self.min_val(game_state, color, max_color, depth, alpha, beta)
+
+    # max val returns (value, action)
+    def max_val(self, game_state, color, max_color, depth, alpha, beta):
+        value = -math.inf
+        actions = game_state.get_all_legal_moves(color)
+        action = None
+        alp = alpha
+        bet = beta
+        for a in actions:
+            game_state.move_piece(a[0], a[1], True)
+            v = self.val_ab(game_state, next_color(color), max_color, depth - 1, alpha, beta)[0]
+            game_state.undo_move()
+
+            if v > value:
+                value = v
+                action = a
+
+            if value > bet:
+                return value, action
+
+            alp = max(alp, value)
+
+        return value, action
+    
+    def min_val(self, game_state, color, max_color, depth, alpha, beta):
+        value = math.inf
+        actions = game_state.get_all_legal_moves(color)
+        action = None
+        alp = alpha
+        bet = beta
+        for a in actions:
+            game_state.move_piece(a[0], a[1], True)
+            v = self.val_ab(game_state, next_color(color), max_color, depth - 1, alpha, beta)[0]
+            game_state.undo_move()
+
+            if v < value:
+                value = v
+                action = a
+
+            if value < alp:
+                return value, action
+
+            bet = min(bet, value)
+
+        return value, action
+
 class q_agent(agent):
-    def __init__(self, explore_rate = 0.5, learn_rate = 0.2, discount_factor = 0.8, file="q_agent", heuristic = piece_squares_table_heuristic()):
+    def __init__(self, explore_rate = 0.5, learn_rate = 0.2, discount_factor = 0.5, file="q_agent", heuristic = piece_squares_table_heuristic()):
         # reading the data from the file
         if exists(file):
             print('loading file')
@@ -637,6 +725,42 @@ class q_agent(agent):
         return move
 
     def update(self, game_state, move, next_val, color):
+        #reward = self.reward.get_reward(game_state, move, color)
+        # print(move[0])
+        # print(move[1])
+        # print(game_state.get_piece(move[0][0], move[0][1]))
+        # print(game_state.get_piece(move[1][0], move[1][1]))
+        piece1 = game_state.get_piece(move[0][0], move[0][1])
+        piece2 = game_state.get_piece(move[1][0], move[1][1])
+        if piece1 == -9 or piece2 == -9:
+            reward = 0.0
+        else:
+            reward = -self.get_piece_value(piece1)*0.1 + self.get_piece_value(piece2)
+        
+        game_state.move_piece(move[0], move[1], True)
+        csc = game_state.checkmate_stalemate_checker()
+        game_state.undo_move()
+        if csc==0:
+            # white lost
+            if color=="white":
+                reward = -5000000.0
+            else:
+                reward = 5000000.0
+        if csc==1:
+            # black lost
+            if color=="white":
+                reward = 5000000.0
+            else:
+                reward = -5000000.0
+
+        # print(reward)
+
+        game_state_str = game_state.get_board_str()
+        v = self.q_values.get(game_state_str + str(move), 0.0)
+        self.q_values[game_state_str + str(move)] = v + self.learn_rate * (reward + self.discount_factor * next_val - v)
+
+    # reward function for evaluating a board based on a heuristic
+    def update2(self, game_state, move, next_val, color):
         reward = -self.heuristic.evaluate_board(game_state, color)
         game_state.move_piece(move[0], move[1], True)
         reward += self.heuristic.evaluate_board(game_state, color)
@@ -654,6 +778,20 @@ class q_agent(agent):
 
         self.save_in_file(file)
 
+    def get_piece_value(self, piece):
+            if piece.get_name() is "k":
+                return 100
+            elif piece.get_name() is "q":
+                return 90
+            elif piece.get_name() is "r":
+                return 50
+            elif piece.get_name() is "b":
+                return 30
+            elif piece.get_name() is "n":
+                return 30
+            elif piece.get_name() is "p":
+                return 10
+
     def save_in_file(self, file=None):
         if file==None:
             file = self.file
@@ -662,5 +800,3 @@ class q_agent(agent):
         with open(file, 'w') as f:
             f.write(json.dumps(self.q_values))
         f.close()
-
-    
