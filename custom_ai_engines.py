@@ -53,9 +53,9 @@ class piece_squares_tables():
         [50, 50, 50, 50],
         [30, 30, 25, 25],
         [10, 10, 10, 10],
-        [5, 10, 10, 5],
-        [5, 5, 5, 5],
-        [0, 0, 0, 0]]
+        [5,  10, 10,  5],
+        [5,   5,  5,  5],
+        [0,   0,  0,  0]]
     
         self.knight_table_8 = [
         -50,-40,-30,-30,-30,-30,-40,-50,
@@ -764,6 +764,92 @@ class suicide_minimax_alpha_beta_agent(agent):
             bet = min(bet, value)
 
         return value, action
+
+class expectimax_agent(agent):
+    def __init__(self, depth=3, heuristic=piece_value_heuristic()):
+        self.depth = depth
+        self.heuristic = heuristic
+        self.prev_game_states = []
+    
+    def restart(self):
+        self.prev_game_states = []
+
+    def get_move(self, game_state, color):
+        '''
+        gets the best move according to the chess engine we implemented
+
+        returns ((start row, start col)), (end row, end col))
+        '''
+        actions = game_state.get_all_legal_moves(color)
+        action = None
+        value = -math.inf
+
+        for a in actions:
+            game_state.move_piece(a[0], a[1], True)
+            v = self.val(game_state, next_color(color), color, self.depth)
+            game_state.undo_move()
+        # print("this turn is:", color)
+        # print("best val", val)
+        # print("white evaluation", self.heuristic.evaluate_board(game_state, "white"))
+        # print("black evaluation", self.heuristic.evaluate_board(game_state, "black"))
+            if v > value:
+                value = v
+                action = a
+
+        self.prev_game_states.append(game_state.get_board_str())
+        return action
+        
+    
+    def val(self, game_state, color, max_color, depth):
+        csc = game_state.checkmate_stalemate_checker()
+        if csc == 0: # white lost
+            if max_color == "white":
+                return -5000000
+            elif max_color == "black":
+                return 5000000
+        elif csc == 1: # black lost
+            if max_color == "white":
+                return 5000000
+            elif max_color == "black":
+                return -5000000
+        elif csc == 2: # tie
+            return 100
+
+        if game_state.get_board_str() in self.prev_game_states:
+            return -100000#, random.choice(game_state.get_all_legal_moves(color))
+
+        if depth == 0:
+            return self.heuristic.evaluate_board(game_state, max_color)
+
+        if color == max_color:
+            return self.max_val(game_state, color, max_color, depth)
+        else:
+            return self.min_val(game_state, color, max_color, depth)
+
+    # max val returns (value, action)
+    def max_val(self, game_state, color, max_color, depth):
+        values = []
+        actions = game_state.get_all_legal_moves(color)
+        action = None
+        for a in actions:
+            game_state.move_piece(a[0], a[1], True)
+            v = self.val(game_state, next_color(color), max_color, depth - 1)
+            game_state.undo_move()
+            values.append(v)
+
+        return sum(values)
+    
+    def min_val(self, game_state, color, max_color, depth):
+        values = []
+        actions = game_state.get_all_legal_moves(color)
+        action = None
+        for a in actions:
+            game_state.move_piece(a[0], a[1], True)
+            v = self.val(game_state, next_color(color), max_color, depth - 1)
+            game_state.undo_move()
+            values.append(v)
+
+        return sum(values)
 
 class q_agent(agent):
     def __init__(self, explore_rate = 0.5, learn_rate = 0.2, discount_factor = 0.5, file="q_agent", heuristic = piece_squares_table_heuristic()):
