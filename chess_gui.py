@@ -245,6 +245,8 @@ def main():
                 square_selected = ()
                 player_clicks = []
                 valid_moves = []
+                ai.restart()
+                ai2.restart()
         return
     
     # run a game with human players
@@ -297,6 +299,7 @@ def main():
                     square_selected = ()
                     player_clicks = []
                     valid_moves = []
+                    ai.restart()
                 elif e.key == py.K_u:
                     game_state.undo_move()
                     print(len(game_state.move_log))
