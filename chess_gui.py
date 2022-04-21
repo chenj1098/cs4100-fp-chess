@@ -248,7 +248,7 @@ def main():
         return
     
     # run a game with human players
-    if number_of_players != 0 and human_player is 'b':
+    if number_of_players == 1 and human_player is 'b':
         ai_move = ai_move = ai.get_move(game_state, Player.PLAYER_1)
         game_state.move_piece(ai_move[0], ai_move[1], True)
     while running:
@@ -279,11 +279,11 @@ def main():
                             player_clicks = []
                             valid_moves = []
 
-                            if human_player is 'w':
-                                ai_move = ai_move = ai_move = ai.get_move(game_state, Player.PLAYER_2)
-                                game_state.move_piece(ai_move[0], ai_move[1], True)
-                            elif human_player is 'b':
+                            if 'w' in cpu_player:
                                 ai_move = ai_move = ai_move = ai.get_move(game_state, Player.PLAYER_1)
+                                game_state.move_piece(ai_move[0], ai_move[1], True)
+                            elif 'b' in cpu_player:
+                                ai_move = ai_move = ai_move = ai.get_move(game_state, Player.PLAYER_2)
                                 game_state.move_piece(ai_move[0], ai_move[1], True)
                     else:
                         valid_moves = game_state.get_valid_moves((row, col))

@@ -6,7 +6,9 @@ import custom_ai_engines
 # custom_ai_engines.minimax_alpha_beta_agent(depth=3)
 
 # white ai
-AI1 = custom_ai_engines.q_agent(explore_rate = 0.2,file="agent1.2")
+#AI1 = custom_ai_engines.q_agent(explore_rate = 0.2,learn_rate = 0.5,file="agent1.2")
+AI2 = custom_ai_engines.minimax_alpha_beta_agent(depth=3, heuristic=custom_ai_engines.suicide_heuristic())
 # black ai
-AI2 = custom_ai_engines.q_agent(explore_rate = 0.2,file="agent2.2")
+#AI2 = custom_ai_engines.q_agent(explore_rate = 0.5,learn_rate = 0.5,file="agent2.2")
 #AI2 = custom_ai_engines.minimax_alpha_beta_agent(depth=2, heuristic=custom_ai_engines.piece_value_heuristic())
+AI1 = custom_ai_engines.minimax_alpha_beta_agent(depth=3, heuristic=custom_ai_engines.spacial_heuristic())

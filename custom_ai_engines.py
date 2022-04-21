@@ -32,6 +32,8 @@ class agent():
         raise Exception("evaluate_board not implemented")
     def update(self, reward=0.0, file=None):
         pass
+    def save_in_file(self):
+        pass
 
 
 
@@ -134,6 +136,61 @@ class capture_heuristic(heuristic):
                 return 30 * .1
             elif piece.get_name() is "p":
                 return 10 * .1
+
+class spacial_heuristic(heuristic):
+    def evaluate_board(self, game_state, max_color):
+        evaluation_score = 0
+        for col in range(0, DIMENSION_COL):
+            white_best_val = 0
+            black_best_val = 0
+            for row in range(0, DIMENSION_ROW):
+                # print(row, col)
+                if game_state.is_valid_piece(row, col):
+                    piece_color = game_state.get_piece(row, col).get_player()
+                    evaluated_piece = game_state.get_piece(row, col)
+                    evaluation_score += self.get_piece_value(evaluated_piece, max_color)
+
+                    if (row + 1) * 10 > black_best_val and piece_color == "black":
+                        black_best_val = (row + 1) * 10
+                    if (DIMENSION_ROW - row) * 10 > white_best_val and piece_color == "white":
+                        white_best_val = (DIMENSION_ROW - row) * 10                    
+            
+            if max_color == "white":
+                evaluation_score += white_best_val - black_best_val
+            else:
+                evaluation_score += black_best_val - white_best_val
+            
+        # print("evaluated board", evaluation_score)
+        return evaluation_score
+
+    def get_piece_value(self, piece, max_color):
+        # print("found piece", piece.get_name(), piece.get_player())
+        if piece.get_player() == max_color:
+            if piece.get_name() is "k":
+                return 1000
+            elif piece.get_name() is "q":
+                return 100
+            elif piece.get_name() is "r":
+                return 50
+            elif piece.get_name() is "b":
+                return 30
+            elif piece.get_name() is "n":
+                return 30
+            elif piece.get_name() is "p":
+                return 10
+        else:
+            if piece.get_name() is "k":
+                return -1000
+            elif piece.get_name() is "q":
+                return -100
+            elif piece.get_name() is "r":
+                return -50
+            elif piece.get_name() is "b":
+                return -30
+            elif piece.get_name() is "n":
+                return -30
+            elif piece.get_name() is "p":
+                return -10 
 
 class piece_squares_table_heuristic(heuristic):
     def __init__(self):
@@ -336,6 +393,54 @@ class piece_squares_table_heuristic(heuristic):
             elif piece.get_name() is "p":
                 return -10
     
+
+class suicide_heuristic(heuristic):
+    def evaluate_board(self, game_state, max_color):
+        evaluation_score = 0
+        for row in range(0, DIMENSION_ROW):
+            for col in range(0, DIMENSION_COL):
+                # print(row, col)
+                if game_state.is_valid_piece(row, col):
+                    piece_color = game_state.get_piece(row, col).get_player()
+                    if piece_color == max_color:
+                        if max_color == "white":
+                            evaluation_score += (DIMENSION_ROW-row)-25
+                        else:
+                            evaluation_score += row-25
+                    else:
+                        evaluation_score += 10
+        # print("evaluated board", evaluation_score)
+        return evaluation_score
+
+    def get_piece_value(self, piece, max_color):
+        # print("found piece", piece.get_name(), piece.get_player())
+        if piece.get_player() != max_color:
+            # if piece.get_name() is "k":
+            #     return 1000
+            # elif piece.get_name() is "q":
+            #     return 100
+            # elif piece.get_name() is "r":
+            #     return 50
+            # elif piece.get_name() is "b":
+            #     return 30
+            # elif piece.get_name() is "n":
+            #     return 30
+            # elif piece.get_name() is "p":
+            #     return 10
+            return 0
+        else:
+            if piece.get_name() is "k":
+                return -1000
+            elif piece.get_name() is "q":
+                return -100
+            elif piece.get_name() is "r":
+                return -50
+            elif piece.get_name() is "b":
+                return -30
+            elif piece.get_name() is "n":
+                return -30
+            elif piece.get_name() is "p":
+                return -10
 
 
 class piece_value_heuristic(heuristic):

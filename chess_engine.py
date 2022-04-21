@@ -45,6 +45,11 @@ class game_state:
         self.checkmate = False
         self.stalemate = False
 
+        self.state_history = []
+        self.state_next_history = []
+        self.pgn = ''
+        self.pgns = []
+
         self._is_check = False
         if DIMENSION_COL == 4:
             self.init_4x4()
